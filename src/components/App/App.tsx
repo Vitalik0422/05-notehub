@@ -11,7 +11,7 @@ import { createNote, deleteNote, fetchNotes } from '../../services/noteService';
 import { useState } from 'react';
 
 //components
-import SearchBox from '../SeacrhBox/SearchBox';
+import SearchBox from '../SearchBox/SearchBox';
 import Pagination from '../Pagination/Pagination';
 import Button from '../UI/Button/Button';
 import NoteList from '../NoteList/NoteList';
