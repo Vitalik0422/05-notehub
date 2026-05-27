@@ -1,14 +1,9 @@
 // styles
 import css from './App.module.css';
 //hooks
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
-import { createNote, deleteNote, fetchNotes } from '../../services/noteService';
-import { useState } from 'react';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { fetchNotes } from '../../services/noteService';
+import { useState, type ChangeEvent } from 'react';
 
 //components
 import SearchBox from '../SearchBox/SearchBox';
@@ -17,15 +12,14 @@ import Button from '../UI/Button/Button';
 import NoteList from '../NoteList/NoteList';
 import Loader from '../Loader/Loader';
 import Modal from '../Modal/Modal';
-import type { GetNoteRequest } from '../../types/note';
 import { useDebounce } from 'use-debounce';
-import toast, { Toaster } from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast';
 import InfoMessage from '../InformMessage/InfoMessage';
 import ErrorMessage from '../ErrorMessage/ErrorMessage';
+import NoteForm from '../NoteForm/NoteForm';
 
 const App = () => {
-  const queryClient = useQueryClient();
-  const [searchQuery, setSetSearchQuery] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [isVisibleModal, setIsVisibleModal] = useState<boolean>(false);
   const [search] = useDebounce(searchQuery, 1000);
@@ -36,34 +30,9 @@ const App = () => {
     placeholderData: keepPreviousData,
   });
 
-  const createNoteMutation = useMutation({
-    mutationFn: async (data: GetNoteRequest) => createNote(data),
-    onSuccess: (note) => {
-      queryClient.invalidateQueries({ queryKey: ['note'] });
-      toast.success(`Note ${note.title} was created`);
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const deleteNoteMutation = useMutation({
-    mutationFn: async (id: string) => deleteNote(id),
-    onSuccess: (note) => {
-      queryClient.invalidateQueries({ queryKey: ['note'] });
-      toast.success(`Note with id: ${note.id} was deleted`);
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const getFormData = async (data: GetNoteRequest) => {
-    await createNoteMutation.mutateAsync(data);
-  };
-
-  const handleDeleteNote = (id: string) => {
-    deleteNoteMutation.mutate(id);
+  const handleSearchNoteInput = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value.trim());
+    setPage(1);
   };
 
   const openModal = () => {
@@ -74,7 +43,7 @@ const App = () => {
     setIsVisibleModal(false);
   };
   //boolean const
-  const isSearchFetching = search.length > 0 && isFetching;
+  const isSearchFetching = searchQuery.length > 0 && isFetching;
   const totalPages = data?.totalPages || 1;
 
   return (
@@ -82,8 +51,7 @@ const App = () => {
       <header className={css.toolbar}>
         <SearchBox
           searchValue={searchQuery}
-          setSearchValue={setSetSearchQuery}
-          setPage={setPage}
+          handleSearchNoteInput={handleSearchNoteInput}
           isLoading={isSearchFetching}
         />
 
@@ -97,14 +65,16 @@ const App = () => {
       <main>
         {isLoading && isFetching && <Loader />}
         {data?.notes.length !== 0 ? (
-          <NoteList notes={data?.notes} handleDeleteNote={handleDeleteNote} />
+          <NoteList notes={data?.notes} />
         ) : (
           <InfoMessage />
         )}
         {error && <ErrorMessage message={error.message} />}
       </main>
       {isVisibleModal && (
-        <Modal onClose={closeModal} submitNoteData={getFormData} />
+        <Modal onClose={closeModal}>
+          <NoteForm onClose={closeModal} />
+        </Modal>
       )}
 
       <div>

@@ -7,7 +7,7 @@ import type { ReactPaginateProps } from 'react-paginate';
 interface PaginationProps {
   page: number;
   setPage: (value: number) => void;
-  totalPages: number | 1;
+  totalPages: number;
 }
 
 type ModuleWithDefault<T> = { default: T };
@@ -19,11 +19,15 @@ const ReactPaginate = (
 ).default;
 
 const Pagination = ({ page, setPage, totalPages }: PaginationProps) => {
+  const handlePageChange: ReactPaginateProps['onPageChange'] = ({ selected }) => {
+    setPage(selected + 1);
+  };
+
   return (
     <ReactPaginate
       breakLabel="..."
       nextLabel=">"
-      onPageChange={({ selected }) => setPage(selected + 1)}
+      onPageChange={handlePageChange}
       pageRangeDisplayed={5}
       marginPagesDisplayed={1}
       pageCount={totalPages}

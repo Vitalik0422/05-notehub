@@ -1,38 +1,50 @@
 import { Field, Form, Formik, type FormikHelpers } from 'formik';
 import css from './NoteForm.module.css';
-import type { GetNoteRequest } from '../../types/note';
+import type { NoteFormData } from '../../types/note';
 import { NoteSchema } from '../../schemas/noteSchema';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+
+import { createNote } from '../../services/noteService';
 
 interface NoteFormProps {
-  submitNoteData: (data: GetNoteRequest) => Promise<void>;
   onClose: () => void;
 }
 
-const NoteForm = ({ submitNoteData, onClose }: NoteFormProps) => {
-  const initialValues: GetNoteRequest = {
+const NoteForm = ({ onClose }: NoteFormProps) => {
+  const queryClient = useQueryClient();
+
+  const initialValues: NoteFormData = {
     title: '',
     content: '',
     tag: 'Todo',
   };
 
-  const createNote = async (
-    values: GetNoteRequest,
-    actions: FormikHelpers<GetNoteRequest>,
-  ) => {
-    try {
-      await submitNoteData(values);
-      actions.resetForm();
+  const createNoteMutation = useMutation({
+    mutationFn: createNote,
+    onSuccess: (note) => {
+      queryClient.invalidateQueries({ queryKey: ['note'] });
+      toast.success(`Note ${note.title} was created`);
       onClose();
-    } catch {
-      //
-    }
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const handleCreateNote = async (
+    values: NoteFormData,
+    actions: FormikHelpers<NoteFormData>,
+  ) => {
+    await createNoteMutation.mutateAsync(values);
+    actions.resetForm();
   };
 
   return (
     <Formik
       initialValues={initialValues}
       validationSchema={NoteSchema}
-      onSubmit={createNote}
+      onSubmit={handleCreateNote}
     >
       {({ errors, touched, dirty, isValid, isSubmitting }) => (
         <Form className={css.form}>

@@ -2,24 +2,17 @@ import type { ChangeEvent } from 'react';
 import css from './SearchBox.module.css';
 import { RotatingLines } from 'react-loader-spinner';
 
-interface SeacrhBoxProps {
+interface SearchBoxProps {
   searchValue: string;
-  setSearchValue: (query: string) => void;
-  setPage: (value: number) => void;
+  handleSearchNoteInput: (query: ChangeEvent<HTMLInputElement>) => void;
   isLoading: boolean;
 }
 
 const SearchBox = ({
   searchValue,
-  setSearchValue,
-  setPage,
+  handleSearchNoteInput,
   isLoading,
-}: SeacrhBoxProps) => {
-  const changeSearchNoteInput = (e: ChangeEvent<HTMLInputElement>) => {
-    setSearchValue(e.target.value);
-    setPage(1);
-  };
-
+}: SearchBoxProps) => {
   return (
     <div className={css.formWrapper}>
       <input
@@ -27,7 +20,7 @@ const SearchBox = ({
         className={css.input}
         type="text"
         placeholder="Search notes"
-        onChange={changeSearchNoteInput}
+        onChange={handleSearchNoteInput}
       />
       <RotatingLines
         visible={isLoading}
